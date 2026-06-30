@@ -2,7 +2,7 @@ import os
 
 from sqlalchemy import inspect, text
 
-from order.extentions.db import db
+from src.order_service.extentions.db import db
 
 
 def _find_first_existing_column(table_columns, candidates):

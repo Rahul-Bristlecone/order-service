@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from order.utils.edifact_transformer import transform_edifact_to_json
+from src.order_service.utils.edifact_transformer import transform_edifact_to_json
 
 
 class _MockResponse:
@@ -43,7 +43,7 @@ def test_transform_edifact_to_json_accepts_valid_payload(monkeypatch, tmp_path: 
             return _MockResponse(200, {"product_id": 3, "price": 10.5})
         return _MockResponse(404, {})
 
-    monkeypatch.setattr("order.utils.edifact_transformer.requests.get", _mock_get)
+    monkeypatch.setattr("src.order_service.utils.edifact_transformer.requests.get", _mock_get)
 
     result = transform_edifact_to_json(
         str(edi_file),
@@ -106,7 +106,7 @@ def test_transform_edifact_to_json_rejects_customer_not_found(monkeypatch, tmp_p
             return _MockResponse(200, {"product_id": 3, "price": 10.5})
         return _MockResponse(404, {})
 
-    monkeypatch.setattr("order.utils.edifact_transformer.requests.get", _mock_get)
+    monkeypatch.setattr("src.order_service.utils.edifact_transformer.requests.get", _mock_get)
     result = transform_edifact_to_json(
         str(edi_file),
         {
@@ -151,7 +151,7 @@ def test_transform_edifact_to_json_rejects_company_not_found(monkeypatch, tmp_pa
             return _MockResponse(200, {"product_id": 3, "price": 10.5})
         return _MockResponse(404, {})
 
-    monkeypatch.setattr("order.utils.edifact_transformer.requests.get", _mock_get)
+    monkeypatch.setattr("src.order_service.utils.edifact_transformer.requests.get", _mock_get)
     result = transform_edifact_to_json(
         str(edi_file),
         {
@@ -195,7 +195,7 @@ def test_transform_edifact_to_json_rejects_store_not_found(monkeypatch, tmp_path
             return _MockResponse(200, {"product_id": 3, "price": 10.5})
         return _MockResponse(404, {})
 
-    monkeypatch.setattr("order.utils.edifact_transformer.requests.get", _mock_get)
+    monkeypatch.setattr("src.order_service.utils.edifact_transformer.requests.get", _mock_get)
     result = transform_edifact_to_json(
         str(edi_file),
         {
@@ -239,7 +239,7 @@ def test_transform_edifact_to_json_rejects_price_mismatch(monkeypatch, tmp_path:
             return _MockResponse(200, {"product_id": 3, "price": 11.5})
         return _MockResponse(404, {})
 
-    monkeypatch.setattr("order.utils.edifact_transformer.requests.get", _mock_get)
+    monkeypatch.setattr("src.order_service.utils.edifact_transformer.requests.get", _mock_get)
     result = transform_edifact_to_json(
         str(edi_file),
         {
@@ -283,7 +283,7 @@ def test_transform_edifact_to_json_rejects_product_not_found(monkeypatch, tmp_pa
             return _MockResponse(404, {})
         return _MockResponse(404, {})
 
-    monkeypatch.setattr("order.utils.edifact_transformer.requests.get", _mock_get)
+    monkeypatch.setattr("src.order_service.utils.edifact_transformer.requests.get", _mock_get)
     result = transform_edifact_to_json(
         str(edi_file),
         {
@@ -328,7 +328,7 @@ def test_transform_edifact_to_json_extracts_store_number_after_empty_by_token(mo
             return _MockResponse(200, {"product_id": 3, "price": 299.99})
         return _MockResponse(404, {})
 
-    monkeypatch.setattr("order.utils.edifact_transformer.requests.get", _mock_get)
+    monkeypatch.setattr("src.order_service.utils.edifact_transformer.requests.get", _mock_get)
 
     result = transform_edifact_to_json(
         str(edi_file),

@@ -1,0 +1,31 @@
+name: Order service CI
+on:
+  push:
+    branches:
+      - main
+      
+jobs:
+  sast:
+    name: Security Analysis (Static Application Security Testing)
+    uses: Rahul-Bristlecone/user-account-service/.github/workflows/sast.yaml@main
+    with:
+      target-environment: production
+    secrets: inherit
+
+  ci:
+    name: Build and Test
+    needs: sast
+    uses: Rahul-Bristlecone/user-account-service/.github/workflows/reusable-ci.yaml@main
+    with:
+      service-name: order-service
+      docker-repo: daemons
+      target-environment: production
+    secrets: inherit
+  
+  zap:
+    name: OWASP ZAP Scan (Dynamic Application Security Testing)
+    needs: ci
+    uses: Rahul-Bristlecone/user-account-service/.github/workflows/zap.yaml@main
+    with:
+      target-url: https://marry-fifty-rocky.ngrok-free.dev
+    secrets: inherit

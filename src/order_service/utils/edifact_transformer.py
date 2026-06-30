@@ -2,9 +2,9 @@ import re
 import os
 import requests
 import logging
-from order.helper.edifact_parser import parse_edifact
-from order.helper.reference_validator import validate_references_from_database
-from order.config.services import get_service_timeout
+from src.order_service.helper.edifact_parser import parse_edifact
+from src.order_service.helper.reference_validator import validate_references_from_database
+from src.order_service.config.services import get_service_timeout
 
 logger = logging.getLogger(__name__)
 
@@ -307,6 +307,7 @@ def transform_edifact_to_json(file_path: str, service_urls: dict = None) -> dict
     # Validate against external services if explicitly configured
     if validation_source in {"service", "services"} and service_urls:
         references = {}
+        store_num = int(store_number) if str(store_number).isdigit() else None
         
         # Validate customer via Customer Service
         try:
