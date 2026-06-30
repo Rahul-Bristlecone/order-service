@@ -3,9 +3,9 @@ import io
 import pytest
 from flask_jwt_extended import create_access_token
 
-from main import create_app
-from order.extentions.db import db
-from order.models.order_model import OrderModel
+from src.order_service.main import create_app
+from src.order_service.extentions.db import db
+from src.order_service.models.order_model import OrderModel
 
 
 @pytest.fixture()
@@ -34,11 +34,11 @@ def test_upload_edi_creates_order(client, app, monkeypatch):
     token = headers["Authorization"].split()[1]
 
     monkeypatch.setattr(
-        "order.resources.orders.redis_client.get",
+        "src.order_service.resources.orders.redis_client.get",
         lambda _key: '{"token": "%s"}' % token,
     )
     monkeypatch.setattr(
-        "order.resources.orders.transform_edifact_to_json",
+        "src.order_service.resources.orders.transform_edifact_to_json",
         lambda *_args, **_kwargs: {
             "status": "accepted",
             "user_store_number": 1001,
@@ -80,7 +80,7 @@ def test_upload_edi_rejects_duplicate_business_key(client, app, monkeypatch):
     token = headers["Authorization"].split()[1]
 
     monkeypatch.setattr(
-        "order.resources.orders.redis_client.get",
+        "src.order_service.resources.orders.redis_client.get",
         lambda _key: '{"token": "%s"}' % token,
     )
     payload = {
@@ -102,7 +102,7 @@ def test_upload_edi_rejects_duplicate_business_key(client, app, monkeypatch):
             "ship_by_date": "20260620",
         },
     }
-    monkeypatch.setattr("order.resources.orders.transform_edifact_to_json", lambda *_args, **_kwargs: payload)
+    monkeypatch.setattr("src.order_service.resources.orders.transform_edifact_to_json", lambda *_args, **_kwargs: payload)
 
     data = {"file": (io.BytesIO(b"dummy edi"), "order.edi")}
     first = client.post("/upload_edi", data=data, headers=headers, content_type="multipart/form-data")
@@ -118,7 +118,7 @@ def test_upload_edi_rejects_duplicate_po_for_same_user_with_different_customer(c
     token = headers["Authorization"].split()[1]
 
     monkeypatch.setattr(
-        "order.resources.orders.redis_client.get",
+        "src.order_service.resources.orders.redis_client.get",
         lambda _key: '{"token": "%s"}' % token,
     )
 
@@ -164,7 +164,7 @@ def test_upload_edi_rejects_duplicate_po_for_same_user_with_different_customer(c
     ]
 
     monkeypatch.setattr(
-        "order.resources.orders.transform_edifact_to_json",
+        "src.order_service.resources.orders.transform_edifact_to_json",
         lambda *_args, **_kwargs: payloads.pop(0),
     )
 
@@ -182,11 +182,11 @@ def test_upload_edi_requires_confirmation_then_persists_rejected_order(client, a
     token = headers["Authorization"].split()[1]
 
     monkeypatch.setattr(
-        "order.resources.orders.redis_client.get",
+        "src.order_service.resources.orders.redis_client.get",
         lambda _key: '{"token": "%s"}' % token,
     )
     monkeypatch.setattr(
-        "order.resources.orders.transform_edifact_to_json",
+        "src.order_service.resources.orders.transform_edifact_to_json",
         lambda *_args, **_kwargs: {
             "status": "rejected",
             "order_status": "rejected",
@@ -242,7 +242,7 @@ def test_upload_edi_checks_duplicate_po_before_other_validation(client, app, mon
     token = headers["Authorization"].split()[1]
 
     monkeypatch.setattr(
-        "order.resources.orders.redis_client.get",
+        "src.order_service.resources.orders.redis_client.get",
         lambda _key: '{"token": "%s"}' % token,
     )
 
@@ -289,7 +289,7 @@ def test_upload_edi_checks_duplicate_po_before_other_validation(client, app, mon
     ]
 
     monkeypatch.setattr(
-        "order.resources.orders.transform_edifact_to_json",
+        "src.order_service.resources.orders.transform_edifact_to_json",
         lambda *_args, **_kwargs: payloads.pop(0),
     )
 
@@ -309,7 +309,7 @@ def test_reject_order_endpoint_persists_rejected_order(client, app, monkeypatch)
     token = headers["Authorization"].split()[1]
 
     monkeypatch.setattr(
-        "order.resources.orders.redis_client.get",
+        "src.order_service.resources.orders.redis_client.get",
         lambda _key: '{"token": "%s"}' % token,
     )
 
@@ -346,7 +346,7 @@ def test_reject_order_endpoint_accepts_camelcase_store_number(client, app, monke
     token = headers["Authorization"].split()[1]
 
     monkeypatch.setattr(
-        "order.resources.orders.redis_client.get",
+        "src.order_service.resources.orders.redis_client.get",
         lambda _key: '{"token": "%s"}' % token,
     )
 
@@ -384,7 +384,7 @@ def test_reject_order_alias_endpoint_persists_rejected_order(client, app, monkey
     token = headers["Authorization"].split()[1]
 
     monkeypatch.setattr(
-        "order.resources.orders.redis_client.get",
+        "src.order_service.resources.orders.redis_client.get",
         lambda _key: '{"token": "%s"}' % token,
     )
 
@@ -420,7 +420,7 @@ def test_reject_order_endpoint_accepts_store_number_from_raw_data(client, app, m
     token = headers["Authorization"].split()[1]
 
     monkeypatch.setattr(
-        "order.resources.orders.redis_client.get",
+        "src.order_service.resources.orders.redis_client.get",
         lambda _key: '{"token": "%s"}' % token,
     )
 
@@ -461,11 +461,11 @@ def test_reject_order_uses_cached_draft_for_minimal_payload(client, app, monkeyp
     token = headers["Authorization"].split()[1]
 
     monkeypatch.setattr(
-        "order.resources.orders.redis_client.get",
+        "src.order_service.resources.orders.redis_client.get",
         lambda key: '{"token": "%s"}' % token if key == "session:7" else None,
     )
     store = {}
-    monkeypatch.setattr("order.resources.orders.redis_client.setex", lambda key, ttl, value: store.__setitem__(key, value))
+    monkeypatch.setattr("src.order_service.resources.orders.redis_client.setex", lambda key, ttl, value: store.__setitem__(key, value))
 
     payload = {
         "status": "rejected",
@@ -487,7 +487,7 @@ def test_reject_order_uses_cached_draft_for_minimal_payload(client, app, monkeyp
             "ship_by_date": "20260620",
         },
     }
-    monkeypatch.setattr("order.resources.orders.transform_edifact_to_json", lambda *_args, **_kwargs: payload)
+    monkeypatch.setattr("src.order_service.resources.orders.transform_edifact_to_json", lambda *_args, **_kwargs: payload)
 
     first = client.post(
         "/upload_edi",
@@ -497,7 +497,7 @@ def test_reject_order_uses_cached_draft_for_minimal_payload(client, app, monkeyp
     )
     assert first.status_code == 400
 
-    monkeypatch.setattr("order.resources.orders.redis_client.get", lambda key: '{"token": "%s"}' % token if key == "session:7" else store.get(key))
+    monkeypatch.setattr("src.order_service.resources.orders.redis_client.get", lambda key: '{"token": "%s"}' % token if key == "session:7" else store.get(key))
 
     second = client.post(
         "/reject_order",
@@ -515,11 +515,11 @@ def test_reject_order_uses_latest_cached_draft_when_body_empty(client, app, monk
     token = headers["Authorization"].split()[1]
 
     monkeypatch.setattr(
-        "order.resources.orders.redis_client.get",
+        "src.order_service.resources.orders.redis_client.get",
         lambda key: '{"token": "%s"}' % token if key == "session:7" else None,
     )
     store = {}
-    monkeypatch.setattr("order.resources.orders.redis_client.setex", lambda key, ttl, value: store.__setitem__(key, value))
+    monkeypatch.setattr("src.order_service.resources.orders.redis_client.setex", lambda key, ttl, value: store.__setitem__(key, value))
 
     payload = {
         "status": "rejected",
@@ -541,7 +541,7 @@ def test_reject_order_uses_latest_cached_draft_when_body_empty(client, app, monk
             "ship_by_date": "20260620",
         },
     }
-    monkeypatch.setattr("order.resources.orders.transform_edifact_to_json", lambda *_args, **_kwargs: payload)
+    monkeypatch.setattr("src.order_service.resources.orders.transform_edifact_to_json", lambda *_args, **_kwargs: payload)
 
     first = client.post(
         "/upload_edi",
@@ -551,7 +551,7 @@ def test_reject_order_uses_latest_cached_draft_when_body_empty(client, app, monk
     )
     assert first.status_code == 400
 
-    monkeypatch.setattr("order.resources.orders.redis_client.get", lambda key: '{"token": "%s"}' % token if key == "session:7" else store.get(key))
+    monkeypatch.setattr("src.order_service.resources.orders.redis_client.get", lambda key: '{"token": "%s"}' % token if key == "session:7" else store.get(key))
 
     second = client.post(
         "/reject_order",
@@ -569,11 +569,11 @@ def test_upload_edi_persists_na_codes_when_number_lookup_used(client, app, monke
     token = headers["Authorization"].split()[1]
 
     monkeypatch.setattr(
-        "order.resources.orders.redis_client.get",
+        "src.order_service.resources.orders.redis_client.get",
         lambda _key: '{"token": "%s"}' % token,
     )
     monkeypatch.setattr(
-        "order.resources.orders.transform_edifact_to_json",
+        "src.order_service.resources.orders.transform_edifact_to_json",
         lambda *_args, **_kwargs: {
             "status": "accepted",
             "user_store_number": 1001,
@@ -619,11 +619,11 @@ def test_upload_edi_rejected_with_missing_refs_persists_na_codes(client, app, mo
     token = headers["Authorization"].split()[1]
 
     monkeypatch.setattr(
-        "order.resources.orders.redis_client.get",
+        "src.order_service.resources.orders.redis_client.get",
         lambda _key: '{"token": "%s"}' % token,
     )
     monkeypatch.setattr(
-        "order.resources.orders.transform_edifact_to_json",
+        "src.order_service.resources.orders.transform_edifact_to_json",
         lambda *_args, **_kwargs: {
             "status": "rejected",
             "order_status": "rejected",

@@ -3,9 +3,9 @@ from datetime import datetime, UTC
 import pytest
 from flask_jwt_extended import create_access_token
 
-from main import create_app
-from order.extentions.db import db
-from order.models.order_model import OrderModel
+from src.order_service.main import create_app
+from src.order_service.extentions.db import db
+from src.order_service.models.order_model import OrderModel
 
 
 @pytest.fixture()
@@ -64,7 +64,7 @@ def test_patch_order_updates_allowed_fields(client, app, monkeypatch):
     headers = _auth_header(app)
     token = headers["Authorization"].split()[1]
     monkeypatch.setattr(
-        "order.resources.orders.redis_client.get",
+        "src.order_service.resources.orders.redis_client.get",
         lambda _key: '{"token": "%s"}' % token,
     )
 
@@ -92,7 +92,7 @@ def test_patch_order_rejects_unknown_field(client, app, monkeypatch):
     headers = _auth_header(app)
     token = headers["Authorization"].split()[1]
     monkeypatch.setattr(
-        "order.resources.orders.redis_client.get",
+        "src.order_service.resources.orders.redis_client.get",
         lambda _key: '{"token": "%s"}' % token,
     )
 
@@ -111,7 +111,7 @@ def test_patch_order_ignores_extra_frontend_fields(client, app, monkeypatch):
     headers = _auth_header(app)
     token = headers["Authorization"].split()[1]
     monkeypatch.setattr(
-        "order.resources.orders.redis_client.get",
+        "src.order_service.resources.orders.redis_client.get",
         lambda _key: '{"token": "%s"}' % token,
     )
 
@@ -140,7 +140,7 @@ def test_patch_order_updates_document_status_fields(client, app, monkeypatch):
     headers = _auth_header(app)
     token = headers["Authorization"].split()[1]
     monkeypatch.setattr(
-        "order.resources.orders.redis_client.get",
+        "src.order_service.resources.orders.redis_client.get",
         lambda _key: '{"token": "%s"}' % token,
     )
 
@@ -168,7 +168,7 @@ def test_patch_order_accepts_camelcase_status_key(client, app, monkeypatch):
     headers = _auth_header(app)
     token = headers["Authorization"].split()[1]
     monkeypatch.setattr(
-        "order.resources.orders.redis_client.get",
+        "src.order_service.resources.orders.redis_client.get",
         lambda _key: '{"token": "%s"}' % token,
     )
 
@@ -233,7 +233,7 @@ def test_get_order_cancels_expired_pending_order(client, app, monkeypatch):
     headers = _auth_header(app)
     token = headers["Authorization"].split()[1]
     monkeypatch.setattr(
-        "order.resources.orders.redis_client.get",
+        "src.order_service.resources.orders.redis_client.get",
         lambda _key: '{"token": "%s"}' % token,
     )
 
@@ -260,7 +260,7 @@ def test_patch_order_keeps_pending_when_ship_by_date_is_today(client, app, monke
     headers = _auth_header(app)
     token = headers["Authorization"].split()[1]
     monkeypatch.setattr(
-        "order.resources.orders.redis_client.get",
+        "src.order_service.resources.orders.redis_client.get",
         lambda _key: '{"token": "%s"}' % token,
     )
 
