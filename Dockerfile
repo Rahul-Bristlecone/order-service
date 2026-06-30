@@ -20,7 +20,7 @@ RUN apt-get update && apt-get install -y \
 
 # copy the dependency list into the container
 # This allows pip to install the required packages without copying the entire source code    
-COPY pyproject.toml README.md poetry.lock ./
+COPY pyproject.toml README.md ./
 
 # copy the source code into the container
 COPY src/ ./src
