@@ -1,6 +1,6 @@
-from src.order_service.config import services as svc
-from src.order_service.main import create_app
-from src.order_service.schema.order_schema import UpdateOrderSchema
+from order_service.config import services as svc
+from order_service.main import create_app
+from order_service.schema.order_schema import UpdateOrderSchema
 
 
 def test_service_url_resolution_inside_container(monkeypatch):

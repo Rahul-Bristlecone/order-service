@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from src.order_service.utils.edifact_transformer import transform_edifact_to_json
+from order_service.utils.edifact_transformer import transform_edifact_to_json
 
 
 class _MockResponse:

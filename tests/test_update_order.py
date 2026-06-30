@@ -3,9 +3,9 @@ from datetime import datetime, UTC
 import pytest
 from flask_jwt_extended import create_access_token
 
-from src.order_service.main import create_app
-from src.order_service.extentions.db import db
-from src.order_service.models.order_model import OrderModel
+from order_service.main import create_app
+from order_service.extentions.db import db
+from order_service.models.order_model import OrderModel
 
 
 @pytest.fixture()

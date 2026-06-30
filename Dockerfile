@@ -46,16 +46,17 @@ RUN groupadd -r usergroup && useradd -r -g usergroup user
 COPY --from=builder /app/wheels /wheels
 
 # Install the dependencies from the wheels directory and clean up to reduce image size
-RUN pip install --no-cache-dir --upgrade /wheels/* \
+RUN pip install --no-cache-dir /wheels/* \
     && rm -rf /wheels
 
 COPY run.py ./
+
+ENV PYTHONPATH=/src
 
 # Switch to non-root user for all subsequent operations
 USER user
 
 # Environment variable to ensure Python can locate the application modules
-ENV PYTHONPATH=/app/src
 
 # Expose application port (5000) for external access
 EXPOSE 5000

@@ -10,13 +10,13 @@ from flask_smorest import Blueprint, abort
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError
 from werkzeug.exceptions import HTTPException
 
-from src.order_service.utils.edifact_transformer import transform_edifact_to_json
-from src.order_service.config.services import get_service_urls
+from order_service.utils.edifact_transformer import transform_edifact_to_json
+from order_service.config.services import get_service_urls
 
-from src.order_service.extentions.db import db
-from src.order_service.extentions.redis_client import redis_client
-from src.order_service.models.order_model import OrderModel
-from src.order_service.schema.order_schema import OrderSchema, PlainOrderSchema, UpdateOrderSchema
+from order_service.extentions.db import db
+from order_service.extentions.redis_client import redis_client
+from order_service.models.order_model import OrderModel
+from order_service.schema.order_schema import OrderSchema, PlainOrderSchema, UpdateOrderSchema
 
 # Create logger
 logger = logging.getLogger(__name__)

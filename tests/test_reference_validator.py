@@ -1,6 +1,6 @@
 from types import SimpleNamespace
 
-from src.order_service.helper import reference_validator as rv
+from order_service.helper import reference_validator as rv
 
 
 class _ExecResult:

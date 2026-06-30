@@ -2,9 +2,9 @@ import re
 import os
 import requests
 import logging
-from src.order_service.helper.edifact_parser import parse_edifact
-from src.order_service.helper.reference_validator import validate_references_from_database
-from src.order_service.config.services import get_service_timeout
+from order_service.helper.edifact_parser import parse_edifact
+from order_service.helper.reference_validator import validate_references_from_database
+from order_service.config.services import get_service_timeout
 
 logger = logging.getLogger(__name__)
 

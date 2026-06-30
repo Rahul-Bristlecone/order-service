@@ -1,6 +1,6 @@
 import json
 
-from src.order_service.resources import orders as ord_mod
+from order_service.resources import orders as ord_mod
 
 
 def test_orders_helpers_parsing_and_flags():

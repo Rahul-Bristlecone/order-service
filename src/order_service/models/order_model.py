@@ -1,4 +1,4 @@
-from src.order_service.extentions.db import db
+from order_service.extentions.db import db
 from datetime import datetime, UTC
 
 # docker exec -it user-service bash

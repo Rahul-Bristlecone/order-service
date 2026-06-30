@@ -8,10 +8,10 @@ from flask_jwt_extended import JWTManager
 from flask_smorest import Api
 from flask_cors import CORS
 
-from src.order_service.extentions.db import db
+from order_service.extentions.db import db
 # Import all models to register them with SQLAlchemy
-from src.order_service.models.order_model import OrderModel
-from src.order_service.resources.orders import blp as OrderBp
+from order_service.models.order_model import OrderModel
+from order_service.resources.orders import blp as OrderBp
 
 # This is called factory pattern
 

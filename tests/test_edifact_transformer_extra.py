@@ -2,7 +2,7 @@ from pathlib import Path
 
 import requests
 
-from src.order_service.utils import edifact_transformer as tr
+from order_service.utils import edifact_transformer as tr
 
 
 def test_segment_helper_functions():
