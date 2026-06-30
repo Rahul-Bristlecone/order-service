@@ -1,29 +1,40 @@
-# -------------------------------
-# Stage 1: Builder stage
+# ********** Stage 1: Builder stage ***********
 # Purpose: Build and install Python dependencies in an isolated environment
-# -------------------------------
 FROM python:3.12-slim AS builder
+
+# set the working directory inside the container to /app
 WORKDIR /app
 
-# Upgrade pip, setuptools, and wheel to latest versions
-# Ensures compatibility with modern packages and avoids installation issues
-RUN pip install --upgrade pip setuptools wheel
+# Install the necessary system dependencies for building Python packages
+# - build-essential: Provides essential compilation tools (gcc, make, etc.)
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    gcc \
+    musl-dev \
+    libjpeg-dev \
+    zlib1g-dev \
+    libpng-dev \
+    libfreetype6-dev \
+    libssl-dev \
+    libffi-dev
 
-# Copy dependency list into container and install them
-# --no-cache-dir prevents caching wheels, reducing image size
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+# copy the dependency list into the container
+# This allows pip to install the required packages without copying the entire source code    
+COPY pyproject.toml README.md poetry.lock ./
 
-# Copy application source code into builder stage
-# This makes local modules available during dependency resolution
-COPY . ./order_service
+# copy the source code into the container
+COPY src/ ./src
+
+# Install Python dependencies and build wheels
+RUN pip install --upgrade pip setuptools wheel \
+    && pip wheel --no-build-isolation --wheel-dir /app/wheels .
 
 
-# -------------------------------
-# Stage 2: Final stage - Runtime environment
-# Purpose: Create a minimal, secure runtime image with only necessary artifacts
-# -------------------------------
+# *********** Final Stage: Runtime stage ***********
+# Purpose: Create a minimal runtime image with only the necessary dependencies and application code
 FROM python:3.12-slim
+
+# set the working directory inside the container to /app
 WORKDIR /app
 
 # Create a dedicated non-root user for running the application
@@ -32,20 +43,19 @@ RUN groupadd -r usergroup && useradd -r -g usergroup user
 
 # Copy installed dependencies and application code from builder stage
 # This avoids reinstalling dependencies in the final image, saving time and space
-COPY --from=builder /usr/local /usr/local
-COPY --from=builder /app /app
+COPY --from=builder /app/wheels /wheels
 
-# Adjust ownership of application files so the non-root user can access them
-RUN chown -R user:usergroup /app
+# Install the dependencies from the wheels directory and clean up to reduce image size
+RUN pip install --no-cache-dir --upgrade /wheels/* \
+    && rm -rf /wheels
 
-# Set environment variables:
-# - PATH ensures Python binaries are accessible
-# - PYTHONPATH allows imports from /app without modifying sys.path in code
-ENV PATH="/usr/local/bin:$PATH"
-ENV PYTHONPATH=/app
+COPY run.py ./
 
 # Switch to non-root user for all subsequent operations
 USER user
+
+# Environment variable to ensure Python can locate the application modules
+ENV PYTHONPATH=/app/src
 
 # Expose application port (5000) for external access
 EXPOSE 5000
@@ -59,4 +69,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
 
 # Default command: start the application
 # Using explicit Python invocation ensures consistent entrypoint behavior
-CMD ["python", "order_service/run.py"]
+CMD ["python", "run.py"]
