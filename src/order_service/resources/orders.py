@@ -54,17 +54,24 @@ def _parse_ship_by_date(raw_value):
     return None
 
 
-def _derive_order_status(raw_status, ship_by_date_raw):
+def _derive_order_status(raw_status, ship_by_date_raw, poa_status=0):
     # Preserve explicit terminal states if passed by caller.
     if raw_status in {"shipped", "delivered", "cancelled", "rejected"}:
         return raw_status
 
     ship_by_date = _parse_ship_by_date(ship_by_date_raw)
     today = datetime.now(UTC).date()
+    
     if ship_by_date and ship_by_date < today:
         return "cancelled"
+    
     if ship_by_date and ship_by_date >= today:
+        # If POA is sent, order should be outstanding
+        if poa_status == 1:
+            return "outstanding"
+        # If POA is not sent, order should be pending
         return "pending"
+    
     return "processing"
 
 def _is_order_status_enum_mismatch_error(error_text):
@@ -561,13 +568,16 @@ class OrderResource(MethodView):
                 abort(400, message="quantity_to_deliver must be zero or greater")
             order.quantity_to_deliver = quantity_to_deliver
 
+        # Track if we need to re-derive order status
+        should_derive_status = False
+
         if "ship_by_date" in update_data:
             ship_by_date_raw = update_data["ship_by_date"]
             parsed_ship_by_date = _parse_ship_by_date(ship_by_date_raw)
             if not parsed_ship_by_date:
                 abort(400, message="Invalid ship_by_date. Use YYYY-MM-DD or YYYYMMDD")
             order.ship_by_date = parsed_ship_by_date.isoformat()
-            order.order_status = _derive_order_status(order.order_status, order.ship_by_date)
+            should_derive_status = True
 
         new_price = None
         if "unit_price" in update_data:
@@ -580,19 +590,22 @@ class OrderResource(MethodView):
                 abort(400, message="price must be greater than zero")
             order.unit_price = new_price
 
-        poa_status_updated_to_sent = False
         for field_name in ("poa_status", "asn_status", "invoice_status"):
             if field_name in update_data:
                 field_value = int(update_data[field_name])
                 if field_value not in {0, 1}:
                     abort(400, message=f"{field_name} must be either 0 or 1")
                 setattr(order, field_name, field_value)
-                if field_name == "poa_status" and field_value == 1:
-                    poa_status_updated_to_sent = True
+                if field_name == "poa_status":
+                    should_derive_status = True
 
-        # Business rule: once POA is sent, order should move to outstanding.
-        if poa_status_updated_to_sent:
-            order.order_status = "outstanding"
+        # Re-derive order status based on both ship_by_date and poa_status
+        # Business logic:
+        # - If POA is sent (poa_status=1) and ship_by_date is today or later → outstanding
+        # - If POA is not sent (poa_status=0) and ship_by_date is today or later → pending
+        # - If ship_by_date is before today → cancelled
+        if should_derive_status:
+            order.order_status = _derive_order_status(order.order_status, order.ship_by_date, order.poa_status)
 
         # Keep total amount aligned with current mutable commercial values.
         effective_qty = order.quantity_to_deliver if order.quantity_to_deliver is not None else order.ordered_quantity
