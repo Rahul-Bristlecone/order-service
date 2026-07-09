@@ -62,14 +62,16 @@ def _derive_order_status(raw_status, ship_by_date_raw, poa_status=0):
     ship_by_date = _parse_ship_by_date(ship_by_date_raw)
     today = datetime.now(UTC).date()
     
+    # Business logic: check POA status first
+    # If POA is sent, order should be outstanding
+    if poa_status == 1:
+        return "outstanding"
+    
+    # If POA is not sent, check ship_by_date
     if ship_by_date and ship_by_date < today:
         return "cancelled"
     
     if ship_by_date and ship_by_date >= today:
-        # If POA is sent, order should be outstanding
-        if poa_status == 1:
-            return "outstanding"
-        # If POA is not sent, order should be pending
         return "pending"
     
     return "processing"
