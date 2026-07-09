@@ -55,8 +55,8 @@ def _parse_ship_by_date(raw_value):
 
 
 def _derive_order_status(raw_status, ship_by_date_raw, poa_status=0):
-    # Preserve explicit terminal states if passed by caller.
-    if raw_status in {"shipped", "delivered", "cancelled", "rejected"}:
+    # Preserve explicit terminal states (but NOT cancelled - it may need correction)
+    if raw_status in {"shipped", "delivered", "rejected"}:
         return raw_status
 
     ship_by_date = _parse_ship_by_date(ship_by_date_raw)
@@ -88,21 +88,23 @@ def _is_order_status_enum_mismatch_error(error_text):
     )
 
 
-def _refresh_expired_pending_orders(user_id):
-    """Cancel pending orders whose ship-by date has already passed."""
-    pending_orders = OrderModel.query.filter_by(user_id=user_id, order_status="pending").all()
-    if not pending_orders:
+def _correct_all_orders_status(user_id):
+    """Re-derive and correct status for all orders based on current POA status and ship_by_date."""
+    all_orders = OrderModel.query.filter_by(user_id=user_id).all()
+    if not all_orders:
         return
-
-    today = datetime.now(UTC).date()
+    
     has_updates = False
-
-    for order in pending_orders:
-        ship_by_date = _parse_ship_by_date(order.ship_by_date)
-        if ship_by_date and ship_by_date < today:
-            order.order_status = "cancelled"
+    for order in all_orders:
+        # Don't change terminal states
+        if order.order_status in {"shipped", "delivered", "rejected"}:
+            continue
+        
+        derived_status = _derive_order_status(order.order_status, order.ship_by_date, order.poa_status)
+        if derived_status != order.order_status:
+            order.order_status = derived_status
             has_updates = True
-
+    
     if has_updates:
         db.session.commit()
 
@@ -116,6 +118,21 @@ def _refresh_order_if_expired(order):
     today = datetime.now(UTC).date()
     if ship_by_date and ship_by_date < today:
         order.order_status = "cancelled"
+        db.session.commit()
+
+
+def _correct_order_status(order):
+    """Re-derive and correct order status based on current POA status and ship_by_date."""
+    if not order:
+        return
+    
+    # Don't change terminal states
+    if order.order_status in {"shipped", "delivered", "rejected"}:
+        return
+    
+    derived_status = _derive_order_status(order.order_status, order.ship_by_date, order.poa_status)
+    if derived_status != order.order_status:
+        order.order_status = derived_status
         db.session.commit()
 
 
@@ -547,7 +564,7 @@ class OrderResource(MethodView):
         order = OrderModel.query.filter_by(order_id=order_id, user_id=user_id).first()
         if not order:
             abort(404, message="Order not found")
-        _refresh_order_if_expired(order)
+        _correct_order_status(order)
         return order
 
     @jwt_required()
@@ -640,7 +657,7 @@ class OrderList(MethodView):
     @blp.response(200, OrderSchema(many=True))
     def get(self):
         user_id = int(get_jwt_identity())
-        _refresh_expired_pending_orders(user_id)
+        _correct_all_orders_status(user_id)
         return OrderModel.query.filter_by(user_id=user_id).all()
 
 
